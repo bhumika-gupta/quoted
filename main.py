@@ -2,11 +2,16 @@ import httpx
 from selectolax.parser import HTMLParser
 import sys # access command line arguments
 import json
-
-BOOK_URLS = {
+"""
     "Page 1": "https://quotes.toscrape.com/page/1/",
     "Page 2": "https://quotes.toscrape.com/page/2/",
     "Page 3": "https://quotes.toscrape.com/page/3/"
+    """
+BOOK_URLS = {
+    
+    "Page 1": "https://www.goodreads.com/quotes?page=1&ref=nav_comm_quotes",
+    "Page 2": "https://www.goodreads.com/quotes?page=2&ref=nav_comm_quotes",
+    "Page 3": "https://www.goodreads.com/quotes?page=3&ref=nav_comm_quotes"
 }
 print("Select a page to scrape:")
 for i, title in enumerate(BOOK_URLS, 1):
@@ -20,12 +25,17 @@ resp = httpx.get(url, headers=headers)
 html = HTMLParser(resp.text)
 
 quotes_data = []
-books = html.css("div.quote")
+# books = html.css("div.quote")
+books = html.css("div.quoteText")
 
 for book in books:
-        quote = book.css_first("span.text").text()
-        author = book.css_first("small.author").text()
+        # quote = book.css_first("span.text").text()
+        # author = book.css_first("small.author").text()
         # print(f"{quote} – {author}")
+        # quote = book.css_first("div.quoteText").text()
+        quoteText = book.css_first("div.quoteText").text().split("\n")
+        quote = quoteText[1]
+        author = book.css_first("span.authorOrTitle").text()
         quotes_data.append({"quote": quote, "author": author})
 
 # save to JSON
