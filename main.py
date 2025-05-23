@@ -13,26 +13,55 @@ BOOK_URLS = {
     "Page 2": "https://www.goodreads.com/quotes?page=2&ref=nav_comm_quotes",
     "Page 3": "https://www.goodreads.com/quotes?page=3&ref=nav_comm_quotes"
 }
-print("Select a page to scrape:")
-for i, title in enumerate(BOOK_URLS, 1):
-    print(f"{i}. {title}")
-choice = int(input("Enter a number: "))
-url = list(BOOK_URLS.values()   )[choice - 1]
+# print("Select a page to scrape:")
+print("Search for a book!") 
+
+user_book = input("Enter a book name: ")
+search_result = "https://www.goodreads.com/search?q=" + user_book.replace(" ", "+") # TODO: better format into search result
 
 headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
+
+# get search results
+search_resp = httpx.get(search_result, headers=headers)
+search_html = HTMLParser(search_resp.text)
+
+# get first book result (soon, maybe the user can click which one, in case it's not showing the correct one)
+first_result = search_html.css_first("a.bookTitle")
+first_result_href = first_result.attributes["href"]
+book_url = "https://www.goodreads.com" + first_result_href
+
+# visit book page to find the quotes link
+book_resp = httpx.get(book_url, headers=headers)
+book_html = HTMLParser(book_resp.text)
+
+quotes_link = book_html.css_first("a.DiscussionCard")
+quotes_url = quotes_link.attributes["href"]
+
+print("Book page:", book_url)
+print("Quotes page:", quotes_url)
+
+
+
+
+
+
+
+
+"""for i, title in enumerate(BOOK_URLS, 1):
+    print(f"{i}. {title}")
+choice = int(input("Enter a number: "))
+url = list(BOOK_URLS.values()   )[choice - 1]"""
+
+"""# headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
 
 resp = httpx.get(url, headers=headers)
 html = HTMLParser(resp.text)
 
 quotes_data = []
-# books = html.css("div.quote")
+
 books = html.css("div.quoteText")
 
 for book in books:
-        # quote = book.css_first("span.text").text()
-        # author = book.css_first("small.author").text()
-        # print(f"{quote} – {author}")
-        # quote = book.css_first("div.quoteText").text()
         quoteText = book.css_first("div.quoteText").text().split("\n")
         quote = quoteText[1]
         author = book.css_first("span.authorOrTitle").text()
@@ -50,7 +79,7 @@ html_output += "</ul></body></html>"
 with open("quotes.html", "w", encoding="utf-8") as f:
     f.write(html_output)
 
-print("Quotes saved to 'quotes.json' and 'quotes.html'")
+print("Quotes saved to 'quotes.json' and 'quotes.html'")"""
 
 
 """if __name__ == "__main__":
