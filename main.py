@@ -40,6 +40,47 @@ quotes_url = quotes_link.attributes["href"]
 print("Book page:", book_url)
 print("Quotes page:", quotes_url)
 
+quotes_resp = httpx.get(quotes_url, headers=headers)
+quotes_html = HTMLParser(quotes_resp.text)
+
+# debugging
+# print("Length of quotes page HTML:", len(quotes_resp.text))
+# print("Sample HTML snippet:", quotes_resp.text[:1000])
+
+# handle redirect manually
+redirect_link = quotes_html.css_first("a")
+if redirect_link:
+    redirected_url = redirect_link.attributes["href"]
+    print("Redirecting to actual quotes page:", redirected_url)
+    quotes_resp = httpx.get(redirected_url, headers=headers)
+    quotes_html = HTMLParser(quotes_resp.text)
+
+quotes_data = []
+
+quotes = quotes_html.css("div.quoteText")
+
+for quote in quotes:
+        quoteBlock = quote.text().strip().split("\n")
+        quoteText = quoteBlock[0].strip('“”" ')
+        # quote = quoteText[1]
+        author = quote.css_first("span.authorOrTitle").text().strip("\n, ")
+        quotes_data.append({"quote": quoteText, "author": author})
+
+        # print(f"Found quote: {quoteText} – {author}")
+
+# save to JSON
+with open("quotes.json", "w", encoding="utf-8") as f:
+    json.dump(quotes_data, f, indent=2, ensure_ascii=False)
+
+html_output = "<html><body><h1>Quotes</h1><ul>"
+for data in quotes_data: 
+    html_output += f"<li>{data['quote']} – <em>{data['author']}</em></li>"
+html_output += "</ul></body></html>"
+
+with open("quotes.html", "w", encoding="utf-8") as f:
+    f.write(html_output)
+
+print("Quotes saved to 'quotes.json' and 'quotes.html'")
 
 
 
