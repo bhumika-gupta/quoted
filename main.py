@@ -7,83 +7,125 @@ import json
     "Page 2": "https://quotes.toscrape.com/page/2/",
     "Page 3": "https://quotes.toscrape.com/page/3/"
     """
-BOOK_URLS = {
+"""BOOK_URLS = {
     
     "Page 1": "https://www.goodreads.com/quotes?page=1&ref=nav_comm_quotes",
     "Page 2": "https://www.goodreads.com/quotes?page=2&ref=nav_comm_quotes",
     "Page 3": "https://www.goodreads.com/quotes?page=3&ref=nav_comm_quotes"
-}
-# print("Select a page to scrape:")
-print("Search for a book!") 
+}"""
+def get_book_url(book_name, headers):
+    # get search results
+    search_result = "https://www.goodreads.com/search?q=" + book_name.replace(" ", "+") # TODO: better format into search result
+    search_resp = httpx.get(search_result, headers=headers)
+    search_html = HTMLParser(search_resp.text)
 
-user_book = input("Enter a book name: ")
-search_result = "https://www.goodreads.com/search?q=" + user_book.replace(" ", "+") # TODO: better format into search result
+    # get first book result (soon, maybe the user can click which one, in case it's not showing the correct one) 
 
-headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
+    first_result = search_html.css_first("a.bookTitle")
 
-# get search results
-search_resp = httpx.get(search_result, headers=headers)
-search_html = HTMLParser(search_resp.text)
+    if not first_result:
+        print("No book results found.")
+        return 
 
-# get first book result (soon, maybe the user can click which one, in case it's not showing the correct one)
-first_result = search_html.css_first("a.bookTitle")
-first_result_href = first_result.attributes["href"]
-book_url = "https://www.goodreads.com" + first_result_href
+    first_result_href = first_result.attributes["href"]
+    book_url = "https://www.goodreads.com" + first_result_href
+    
+    return book_url
 
-# visit book page to find the quotes link
-book_resp = httpx.get(book_url, headers=headers)
-book_html = HTMLParser(book_resp.text)
 
-quotes_link = book_html.css_first("a.DiscussionCard")
-quotes_url = quotes_link.attributes["href"]
+# TODO: basic error handling: what if book isn't found? what if quote link isn't available? what if no quotes exist?
+# print(search_resp)
 
-print("Book page:", book_url)
-print("Quotes page:", quotes_url)
+# # search_wrong = "https://www.goodreads.ca/doesntexist"
 
-quotes_resp = httpx.get(quotes_url, headers=headers)
-quotes_html = HTMLParser(quotes_resp.text)
+# search_wrong_resp = httpx.get(search_wrong, headers=headers)
 
-# debugging
-# print("Length of quotes page HTML:", len(quotes_resp.text))
-# print("Sample HTML snippet:", quotes_resp.text[:1000])
+# if search_wrong_resp != "<Response [200 OK]>":
+     
+# print(search_wrong_resp)
 
-# handle redirect manually
-redirect_link = quotes_html.css_first("a")
-if redirect_link:
-    redirected_url = redirect_link.attributes["href"]
-    print("Redirecting to actual quotes page:", redirected_url)
-    quotes_resp = httpx.get(redirected_url, headers=headers)
+# if no book is found (on goodreads - for now until we add support from any online source)
+
+
+# if no quote link is available
+
+# if no quotes exist
+
+
+def get_quotes_page_url(book_url, headers):
+    # visit book page to find the quotes link
+    book_resp = httpx.get(book_url, headers=headers)
+    book_html = HTMLParser(book_resp.text)
+
+    quotes_link = book_html.css_first("a.DiscussionCard")
+    quotes_url = quotes_link.attributes["href"]
+
+    print("Book page:", book_url) # keep for now (debugging)
+    print("Quotes page:", quotes_url) # keep for now (debugging)
+
+    if not quotes_link or not quotes_url: # not sure which one
+        print("No quotes link found.")
+        return
+
+    return quotes_url
+
+def extract_quotes(quotes_url, headers):
+    quotes_resp = httpx.get(quotes_url, headers=headers)
     quotes_html = HTMLParser(quotes_resp.text)
 
-quotes_data = []
+    # debugging
+    # print("Length of quotes page HTML:", len(quotes_resp.text))
+    # print("Sample HTML snippet:", quotes_resp.text[:1000])
 
-quotes = quotes_html.css("div.quoteText")
+    # handle redirect manually
+    redirect_link = quotes_html.css_first("a")
+    if redirect_link:
+        redirected_url = redirect_link.attributes["href"]
+        print("Redirecting to actual quotes page:", redirected_url)
+        quotes_resp = httpx.get(redirected_url, headers=headers)
+        quotes_html = HTMLParser(quotes_resp.text)
 
-for quote in quotes:
-        quoteBlock = quote.text().strip().split("\n")
-        quoteText = quoteBlock[0].strip('“”" ')
-        # quote = quoteText[1]
-        author = quote.css_first("span.authorOrTitle").text().strip("\n, ")
-        quotes_data.append({"quote": quoteText, "author": author})
+    quotes_data = []
 
-        # print(f"Found quote: {quoteText} – {author}")
+    quotes = quotes_html.css("div.quoteText")
 
-# save to JSON
-with open("quotes.json", "w", encoding="utf-8") as f:
-    json.dump(quotes_data, f, indent=2, ensure_ascii=False)
+    for quote in quotes:
+            quoteBlock = quote.text().strip().split("\n")
+            quoteText = quoteBlock[0].strip('“”" ')
+            # quote = quoteText[1]
+            author = quote.css_first("span.authorOrTitle").text().strip("\n, ")
+            quotes_data.append({"quote": quoteText, "author": author})
 
-html_output = "<html><body><h1>Quotes</h1><ul>"
-for data in quotes_data: 
-    html_output += f"<li>{data['quote']} – <em>{data['author']}</em></li>"
-html_output += "</ul></body></html>"
+            # print(f"Found quote: {quoteText} – {author}")
+    
+    return quotes_data
 
-with open("quotes.html", "w", encoding="utf-8") as f:
-    f.write(html_output)
+def save_results(quotes_data):
+     # save to JSON
+    with open("quotes.json", "w", encoding="utf-8") as f:
+        json.dump(quotes_data, f, indent=2, ensure_ascii=False)
 
-print("Quotes saved to 'quotes.json' and 'quotes.html'")
+    html_output = "<html><body><h1>Quotes</h1><ul>"
+    for data in quotes_data: 
+        html_output += f"<li>{data['quote']} – <em>{data['author']}</em></li>"
+    html_output += "</ul></body></html>"
+
+    with open("quotes.html", "w", encoding="utf-8") as f:
+        f.write(html_output)
 
 
+def main():
+    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
 
+    print("Search for a book!")
+    user_book = input("Enter a book name: ")
+    book_url = get_book_url(user_book, headers=headers)
+    quotes_url = get_quotes_page_url(book_url, headers=headers)
+    quotes_data = extract_quotes(quotes_url, headers)
+    save_results(quotes_data)
+    print("Quotes saved to 'quotes.json' and 'quotes.html'")
+
+main()
 
 
 
