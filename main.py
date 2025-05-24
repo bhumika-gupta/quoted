@@ -13,6 +13,7 @@ import json
     "Page 2": "https://www.goodreads.com/quotes?page=2&ref=nav_comm_quotes",
     "Page 3": "https://www.goodreads.com/quotes?page=3&ref=nav_comm_quotes"
 }"""
+
 def get_book_url(book_name, headers):
     # get search results
     search_result = "https://www.goodreads.com/search?q=" + book_name.replace(" ", "+") # TODO: better format into search result
@@ -24,32 +25,13 @@ def get_book_url(book_name, headers):
     first_result = search_html.css_first("a.bookTitle")
 
     if not first_result:
-        print("No book results found.")
-        return 
+        # print("No book results found.")
+        return None
 
     first_result_href = first_result.attributes["href"]
     book_url = "https://www.goodreads.com" + first_result_href
     
     return book_url
-
-
-# TODO: basic error handling: what if book isn't found? what if quote link isn't available? what if no quotes exist?
-# print(search_resp)
-
-# # search_wrong = "https://www.goodreads.ca/doesntexist"
-
-# search_wrong_resp = httpx.get(search_wrong, headers=headers)
-
-# if search_wrong_resp != "<Response [200 OK]>":
-     
-# print(search_wrong_resp)
-
-# if no book is found (on goodreads - for now until we add support from any online source)
-
-
-# if no quote link is available
-
-# if no quotes exist
 
 
 def get_quotes_page_url(book_url, headers):
@@ -64,8 +46,8 @@ def get_quotes_page_url(book_url, headers):
     print("Quotes page:", quotes_url) # keep for now (debugging)
 
     if not quotes_link or not quotes_url: # not sure which one
-        print("No quotes link found.")
-        return
+        # print("No quotes link found.")
+        return None
 
     return quotes_url
 
@@ -97,7 +79,10 @@ def extract_quotes(quotes_url, headers):
             quotes_data.append({"quote": quoteText, "author": author})
 
             # print(f"Found quote: {quoteText} – {author}")
-    
+
+    if not quotes_data:
+        return None
+
     return quotes_data
 
 def save_results(quotes_data):
@@ -118,12 +103,39 @@ def main():
     headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
 
     print("Search for a book!")
-    user_book = input("Enter a book name: ")
-    book_url = get_book_url(user_book, headers=headers)
-    quotes_url = get_quotes_page_url(book_url, headers=headers)
-    quotes_data = extract_quotes(quotes_url, headers)
-    save_results(quotes_data)
-    print("Quotes saved to 'quotes.json' and 'quotes.html'")
+    while True:
+        user_book = input("Enter a book name: ")
+        book_url = get_book_url(user_book, headers=headers)
+        if not book_url:
+            print("Book not found.")
+            tryagain = input("Would you like to try again to search for a book? Please enter 'Yes' or 'No': ")
+            if tryagain == "Yes" or tryagain == "yes":
+                continue
+            else: 
+                break
+
+        quotes_url = get_quotes_page_url(book_url, headers=headers)
+        if not quotes_url:
+            print("Could not find a quotes page.")
+            tryagain = input("Would you like to try again to search for a book? Please enter 'Yes' or 'No': ")
+            if tryagain == "Yes" or tryagain == "yes":
+                continue
+            else: 
+                break
+
+        quotes_data = extract_quotes(quotes_url, headers)
+        if not quotes_data:
+            print("No quotes found for this book.")
+            tryagain = input("Would you like to try again to search for a book? Please enter 'Yes' or 'No': ")
+            if tryagain == "Yes" or tryagain == "yes":
+                continue
+            else: 
+                break
+
+        # would want to ask user if they want to search for another book, once the saving feature is better
+        save_results(quotes_data)
+        print("Quotes saved to 'quotes.json' and 'quotes.html'")
+        break
 
 main()
 
