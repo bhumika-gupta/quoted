@@ -51,6 +51,18 @@ def get_quotes_page_url(book_url, headers):
 
     return quotes_url
 
+def handle_redirect(resp, headers):
+    html = HTMLParser(resp.text)
+    redirect_link = html.css_first("a")
+    if redirect_link:
+        redirected_url = redirect_link.attributes.get("href", "")
+        if "quotes" in redirected_url and "goodreads.com" in redirected_url and "blog" not in redirected_url:
+                print("Redirecting to actual quotes page:", redirected_url)
+                new_resp = httpx.get(redirected_url, headers=headers)
+                return new_resp
+                
+    return resp
+
 def extract_quotes(quotes_url, headers):
     # current_url = quotes_url
     quotes_resp = httpx.get(quotes_url, headers=headers)
@@ -61,14 +73,15 @@ def extract_quotes(quotes_url, headers):
     # print("Sample HTML snippet:", quotes_resp.text[:1000])
 
     # handle redirect manually
-    redirect_link = quotes_html.css_first("a")
+    """redirect_link = quotes_html.css_first("a")
     if redirect_link:
         redirected_url = redirect_link.attributes["href"]
         print("Redirecting to actual quotes page:", redirected_url)
         quotes_resp = httpx.get(redirected_url, headers=headers)
-        quotes_html = HTMLParser(quotes_resp.text)
+        quotes_html = HTMLParser(quotes_resp.text)"""
+    quotes_resp = handle_redirect(quotes_resp, headers=headers)
+    quotes_html = HTMLParser(quotes_resp.text)
 
-        # current_url = redirected_url
 
     # support pagination
     # last_page = quotes_html.css_first("span.next_page.disabled")
@@ -101,7 +114,7 @@ def extract_quotes(quotes_url, headers):
         quotes_html = HTMLParser(next_quotes_resp.text)
 
         # handle redirect manually #TODO: need to create separate function or something to modularize this code section
-        redirect_link = quotes_html.css_first("a")
+        """redirect_link = quotes_html.css_first("a")
         if redirect_link:
             # redirected_url = redirect_link.attributes["href"]
             redirected_url = redirect_link.attributes.get("href", "")
@@ -109,7 +122,9 @@ def extract_quotes(quotes_url, headers):
             if "quotes" in redirected_url and "goodreads.com" in redirected_url and "blog" not in redirected_url:
                 print("Redirecting to actual quotes page:", redirected_url)
                 next_quotes_resp = httpx.get(redirected_url, headers=headers)
-                quotes_html = HTMLParser(next_quotes_resp.text)
+                quotes_html = HTMLParser(next_quotes_resp.text)"""
+        next_quotes_resp = handle_redirect(next_quotes_resp, headers=headers)
+        quotes_html = HTMLParser(next_quotes_resp.text)
 
 
     if not quotes_data:
