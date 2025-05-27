@@ -1,19 +1,9 @@
 import httpx
 from selectolax.parser import HTMLParser
-import sys # access command line arguments
-import json
-"""
-    "Page 1": "https://quotes.toscrape.com/page/1/",
-    "Page 2": "https://quotes.toscrape.com/page/2/",
-    "Page 3": "https://quotes.toscrape.com/page/3/"
-    """
-"""BOOK_URLS = {
-    
-    "Page 1": "https://www.goodreads.com/quotes?page=1&ref=nav_comm_quotes",
-    "Page 2": "https://www.goodreads.com/quotes?page=2&ref=nav_comm_quotes",
-    "Page 3": "https://www.goodreads.com/quotes?page=3&ref=nav_comm_quotes"
-}"""
+# import sys # access command line arguments
+# import json
 
+# given a book name, get its Goodreads page URL
 def get_book_url(book_name, headers):
     # get search results
     search_result = "https://www.goodreads.com/search?q=" + book_name.replace(" ", "+") # TODO: better format into search result
@@ -23,17 +13,15 @@ def get_book_url(book_name, headers):
     # get first book result (soon, maybe the user can click which one, in case it's not showing the correct one) 
 
     first_result = search_html.css_first("a.bookTitle")
-
     if not first_result:
-        # print("No book results found.")
-        return None
+        return None # print("No book results found.")
 
     first_result_href = first_result.attributes["href"]
     book_url = "https://www.goodreads.com" + first_result_href
     
     return book_url
 
-
+# from a Goodreads book URL, get the quotes subpage URL
 def get_quotes_page_url(book_url, headers):
     # visit book page to find the quotes link
     book_resp = httpx.get(book_url, headers=headers)
@@ -42,27 +30,27 @@ def get_quotes_page_url(book_url, headers):
     quotes_link = book_html.css_first("a.DiscussionCard")
     quotes_url = quotes_link.attributes["href"]
 
-    print("Book page:", book_url) # keep for now (debugging)
-    print("Quotes page:", quotes_url) # keep for now (debugging)
+    # print("Book page:", book_url) # keep for now (debugging)
+    # print("Quotes page:", quotes_url) # keep for now (debugging)
 
     if not quotes_link or not quotes_url: # not sure which one
-        # print("No quotes link found.")
-        return None
+        return None # print("No quotes link found.")
 
     return quotes_url
 
+# if redirected to an intermediate page, follow to the final quotes page
 def handle_redirect(resp, headers):
     html = HTMLParser(resp.text)
     redirect_link = html.css_first("a")
     if redirect_link:
         redirected_url = redirect_link.attributes.get("href", "")
         if "quotes" in redirected_url and "goodreads.com" in redirected_url and "blog" not in redirected_url:
-                print("Redirecting to actual quotes page:", redirected_url)
-                new_resp = httpx.get(redirected_url, headers=headers)
+                new_resp = httpx.get(redirected_url, headers=headers) # print("Redirecting to actual quotes page:", redirected_url)
                 return new_resp
                 
     return resp
 
+# extract all quotes from the quotes page (supports pagination)
 def extract_quotes(quotes_url, headers):
     quotes_resp = httpx.get(quotes_url, headers=headers)
     # quotes_resp = handle_redirect(quotes_resp, headers=headers) # handle redirect manually
@@ -95,8 +83,11 @@ def extract_quotes(quotes_url, headers):
             break # no next page, exit loop
         
         next_quotes_href = next_quotes_result.attributes.get("href", "")
+        if not next_quotes_href:
+            break
+
         next_quotes_url = "https://www.goodreads.com" + next_quotes_href
-        print("Fetching next page URL: ", next_quotes_url) # debugging statement for pagination
+        # print("Fetching next page URL: ", next_quotes_url) # debugging statement for pagination
         next_quotes_resp = httpx.get(next_quotes_url, headers=headers)
 
         quotes_html = HTMLParser(next_quotes_resp.text)
@@ -110,7 +101,25 @@ def extract_quotes(quotes_url, headers):
 
     return quotes_data
 
-def save_results(quotes_data):
+# main entry point for backend: given a book name, return extracted quotes
+def get_quotes_for_book(book_name):
+    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
+    
+    book_url = get_book_url(book_name, headers=headers)
+    if not book_url:
+        return {"error": "Book not found."}
+
+    quotes_url = get_quotes_page_url(book_url, headers=headers)
+    if not quotes_url:
+        return {"error": "Could not find a quotes page."}
+
+    quotes_data = extract_quotes(quotes_url, headers=headers)
+    if not quotes_data:
+        return {"error": "No quotes found."}
+
+    return {"quotes": quotes_data}
+
+"""def save_results(quotes_data):
      # save to JSON
     with open("quotes.json", "w", encoding="utf-8") as f:
         json.dump(quotes_data, f, indent=2, ensure_ascii=False)
@@ -121,10 +130,10 @@ def save_results(quotes_data):
     html_output += "</ul></body></html>"
 
     with open("quotes.html", "w", encoding="utf-8") as f:
-        f.write(html_output)
+        f.write(html_output)"""
 
 
-def main():
+"""def main():
     headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
 
     print("Search for a book!")
@@ -162,7 +171,7 @@ def main():
         print("Quotes saved to 'quotes.json' and 'quotes.html'")
         break
 
-main()
+main()"""
 
 
 
@@ -210,3 +219,4 @@ print("Quotes saved to 'quotes.json' and 'quotes.html'")"""
 
     for quote, author in results:
         print(f"{quote} – {author}")"""
+
