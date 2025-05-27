@@ -52,6 +52,7 @@ def get_quotes_page_url(book_url, headers):
     return quotes_url
 
 def extract_quotes(quotes_url, headers):
+    # current_url = quotes_url
     quotes_resp = httpx.get(quotes_url, headers=headers)
     quotes_html = HTMLParser(quotes_resp.text)
 
@@ -67,18 +68,49 @@ def extract_quotes(quotes_url, headers):
         quotes_resp = httpx.get(redirected_url, headers=headers)
         quotes_html = HTMLParser(quotes_resp.text)
 
+        # current_url = redirected_url
+
+    # support pagination
+    # last_page = quotes_html.css_first("span.next_page.disabled")
+    next_quotes_result = quotes_html.css_first("a.next_page")
     quotes_data = []
 
-    quotes = quotes_html.css("div.quoteText")
+    
+    # while not last_page: # how to go each subsequent page?
+    while next_quotes_result:
+        # last_page = quotes_html.css_first("span.next_page.disabled")
+        quotes = quotes_html.css("div.quoteText")
 
-    for quote in quotes:
-            quoteBlock = quote.text().strip().split("\n")
-            quoteText = quoteBlock[0].strip('“”" ')
-            # quote = quoteText[1]
-            author = quote.css_first("span.authorOrTitle").text().strip("\n, ")
-            quotes_data.append({"quote": quoteText, "author": author})
+        for quote in quotes:
+                quoteBlock = quote.text().strip().split("\n")
+                quoteText = quoteBlock[0].strip('“”" ')
+                # quote = quoteText[1]
+                author = quote.css_first("span.authorOrTitle").text().strip("\n, ")
+                quotes_data.append({"quote": quoteText, "author": author})
 
-            # print(f"Found quote: {quoteText} – {author}")
+                # print(f"Found quote: {quoteText} – {author}")
+    
+        next_quotes_result = quotes_html.css_first("a.next_page")
+        if not next_quotes_result:
+            break # no next page, exit loop
+        next_quotes_href = next_quotes_result.attributes["href"]
+        next_quotes_url = "https://www.goodreads.com" + next_quotes_href
+        print("Fetching next page URL: ", next_quotes_url) # debugging statement for pagination
+        next_quotes_resp = httpx.get(next_quotes_url, headers=headers)
+
+        quotes_html = HTMLParser(next_quotes_resp.text)
+
+        # handle redirect manually #TODO: need to create separate function or something to modularize this code section
+        redirect_link = quotes_html.css_first("a")
+        if redirect_link:
+            # redirected_url = redirect_link.attributes["href"]
+            redirected_url = redirect_link.attributes.get("href", "")
+
+            if "quotes" in redirected_url and "goodreads.com" in redirected_url and "blog" not in redirected_url:
+                print("Redirecting to actual quotes page:", redirected_url)
+                next_quotes_resp = httpx.get(redirected_url, headers=headers)
+                quotes_html = HTMLParser(next_quotes_resp.text)
+
 
     if not quotes_data:
         return None
