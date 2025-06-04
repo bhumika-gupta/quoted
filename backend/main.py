@@ -48,14 +48,14 @@ def handle_redirect(resp, headers):
     if redirect_link:
         redirected_url = redirect_link.attributes.get("href", "")
         if "quotes" in redirected_url and "goodreads.com" in redirected_url and "blog" not in redirected_url:
-                new_resp = httpx.get(redirected_url, headers=headers, timeout=10) # print("Redirecting to actual quotes page:", redirected_url)
+                new_resp = httpx.get(redirected_url, headers=headers, timeout=15) # print("Redirecting to actual quotes page:", redirected_url)
                 return new_resp
                 
     return resp
 
 # extract all quotes from the quotes page (supports pagination)
-def extract_quotes(quotes_url, headers, max_pages=10):
-    quotes_resp = httpx.get(quotes_url, headers=headers, timeout=10)
+def extract_quotes(quotes_url, headers, max_pages=100):
+    quotes_resp = httpx.get(quotes_url, headers=headers, timeout=15)
     # quotes_resp = handle_redirect(quotes_resp, headers=headers) # handle redirect manually
     
     # quotes_html = HTMLParser(quotes_resp.text) # should keep this line in?
@@ -100,7 +100,7 @@ def extract_quotes(quotes_url, headers, max_pages=10):
 
         next_quotes_url = "https://www.goodreads.com" + next_quotes_href
         # print("Fetching next page URL: ", next_quotes_url) # debugging statement for pagination
-        next_quotes_resp = httpx.get(next_quotes_url, headers=headers, timeout=10)
+        next_quotes_resp = httpx.get(next_quotes_url, headers=headers, timeout=15)
 
         quotes_html = HTMLParser(next_quotes_resp.text)
         
