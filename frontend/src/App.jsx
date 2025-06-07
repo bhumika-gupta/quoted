@@ -84,6 +84,7 @@ function App() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         {/* display search results for quotes*/}
+        { !loading && quotes.length === 0 && (
         <ul>
           {searchResults.map((result, idx) => (
             <div key={idx}>
@@ -91,7 +92,8 @@ function App() {
                 <button onClick={() => fetchQuotes(result.href)}>Get Quotes</button>
             </div>
           ))}
-        </ul>
+        </ul>)
+        }
         
         {!loading && searchResults.length === 0 && !error && quotes.length === 0 && (
           <p>No quotes to display. Try searching for a book!</p>

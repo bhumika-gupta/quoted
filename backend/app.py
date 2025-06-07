@@ -27,7 +27,7 @@ def search_quotes():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/quotes')
+@app.route('/api/quotes')
 def quotes():
     href = request.args.get("href") # this comes from frontend
     if not href:
