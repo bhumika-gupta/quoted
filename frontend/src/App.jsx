@@ -9,22 +9,33 @@ function App() {
   const [quotes, setQuotes] = useState([]); // stores list list of quote results from Flask API, starts as an empty array
   const [loading, setLoading] = useState(false); // loading is a flag to show whether we're currently waiting for a response from the server
   const [error, setError] = useState(null); // error message if the fetch fails or returns an error
+  const [searchResults, setSearchResults] = useState([]);
+  // const [bookHref, setBookHref] = useState("")
+
+  // add function to display search results from get_search_results() function and ask user for input
+  const searchQuotes = async() => {
+    if (!book.trim()) return; // do nothing if input is empty
+    const response = await fetch(`/api/search_results?userBook=${encodeURIComponent(book)}`);
+    // const text = await response.text();
+    // console.log("Raw response text:", text);
+    const data = await response.json();
+    setSearchResults(data.results);
+  }
 
   // function to call backend API and update UI with quotes
-  const searchQuotes = async () => { 
-    if (!book.trim()) return; // do nothing if input is empty
+  const fetchQuotes = async (bookHref) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:5050/api/search?book=${encodeURIComponent(book)}`); // sends a GET request to Flask backend & adds input bookname into the URL
+      const response = await fetch(`http://localhost:5050/api/quotes?href=${encodeURIComponent(bookHref)}`); // sends a GET request to Flask backend & adds input bookname into the URL
       const data = await response.json(); // parse JSON response
       console.log("Response data from backend: ", data);
 
       if (data.error) {
         setError(data.error); // show any error returned from Flask
         setQuotes([]); // clear quotes if there's an error
-      } else if (Array.isArray(data.quotes?.quotes)) {
-        setQuotes(data.quotes.quotes);
+      } else if (Array.isArray(data.quotes)) {
+        setQuotes(data.quotes);
         setError(null);
       } else {
         // setQuotes(data.quotes); // update quotes state
@@ -59,6 +70,7 @@ function App() {
           placeholder="Enter book title"
           style={{ padding: "0.5rem", width: "300px" }}
         />
+
         <button onClick={searchQuotes} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
           Search
         </button>
@@ -71,7 +83,17 @@ function App() {
         {loading ? <p>Loading...</p> : null}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
-        {!loading && !error && quotes.length === 0 && (
+        {/* display search results for quotes*/}
+        <ul>
+          {searchResults.map((result, idx) => (
+            <div key={idx}>
+                <p>{result.bookTitle} by {result.bookAuthor} {result.publishedYear}</p>
+                <button onClick={() => fetchQuotes(result.href)}>Get Quotes</button>
+            </div>
+          ))}
+        </ul>
+        
+        {!loading && searchResults.length === 0 && !error && quotes.length === 0 && (
           <p>No quotes to display. Try searching for a book!</p>
         )}
         

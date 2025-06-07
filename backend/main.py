@@ -3,8 +3,53 @@ from selectolax.parser import HTMLParser
 # import sys # access command line arguments
 import json
 
+def get_search_results(user_search, headers):
+    # return a list of 5 results
+    # https://www.goodreads.com/search?q=the+subtle+art&qid=
+    # https://www.goodreads.com/search?q=atomic&qid=
+    # https://www.goodreads.com/search?q=atomic+habits&qid=
+    # https://www.goodreads.com/search?q=harry+potter&qid=
+    # https://www.goodreads.com/search?q=harry+potter+and+the+sorcerer%27s+stone&qid=
+
+    search_result = "https://www.goodreads.com/search?q=" + user_search.replace(" ", "+") + "&qid="
+    search_resp = httpx.get(search_result, headers=headers, timeout=10)
+    search_html = HTMLParser(search_resp.text)
+
+    # i want to fetch the book title, book author, published year and goodreads book quotes link
+    books = search_html.css("table.tableList tr[itemtype='http://schema.org/Book']")
+    results = []
+    for book in books[:5]:
+        bookTitle = book.css_first("a.bookTitle span[itemprop='name']")
+        bookAuthor = book.css_first("span[itemprop='author'] span[itemprop='name']") # TODO
+        publishedYearBox = book.css_first("span.greyText.smallText.uitext")
+        if publishedYearBox: # in case it's None
+            publishedYearContent = publishedYearBox.text()
+            publishedYearText = publishedYearContent.split() # TODO: use regex to find 4 digit year
+            publishedYear = publishedYearText[2]
+        results.append({
+            "bookTitle": bookTitle.text() if bookTitle else "N/A", 
+            "bookAuthor": bookAuthor.text() if bookAuthor else "N/A", 
+            "publishedYear": publishedYear,
+            "href": book.css_first("a.bookTitle").attributes["href"]}) 
+        # should i also get the book quotes link???
+        
+    return results
+
+    # search_results = []
+    #for result in range(5):
+    #     search_results += goodreads_html.css_first
+    """search_results = goodreads_html.css("div.gr-bookSearchResults__item")
+    if not search_results:
+        return None"""
+
 # given a book name, get its Goodreads page URL
 def get_book_url(book_name, headers):
+    # TODO
+
+    
+    # previous code:
+
+
     # get search results
     search_result = "https://www.goodreads.com/search?q=" + book_name.replace(" ", "+") # TODO: better format into search result
     search_resp = httpx.get(search_result, headers=headers, timeout=10)
@@ -114,9 +159,11 @@ def extract_quotes(quotes_url, headers, max_pages=100):
     return quotes_data
 
 # main entry point for backend: given a book name, return extracted quotes
-def get_quotes_for_book(book_name):
+def get_quotes_for_book(book_name): # change parameter to user_book? or user_search?
     headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
     
+    # run get_search_results function based on book_name? 
+
     book_url = get_book_url(book_name, headers=headers)
     if not book_url:
         return {"error": "Book not found."}
