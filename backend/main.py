@@ -144,25 +144,25 @@ def extract_quotes(quotes_url, headers, max_pages=100):
 
     return quotes_data # returns the collected quotes
 
-def get_quotes_for_book(book_name):
+def get_quotes_from_href(href): # previously param was book_name
     # Entry point: uses all helpers to get quotes for a given book name
     headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
     
-    # step 1: get book URL from search
-
-    book_url = get_book_url(book_name, headers=headers)
+    book_url = "https://www.goodreads.com" + href
     if not book_url:
-        return {"error": "Book not found."}
+        return {"error": "Could not find a book page."}
 
-    # step 2: get quotes page URL from book page
+    # step 1: get quotes page URL from book page
     quotes_url = get_quotes_page_url(book_url, headers=headers)
+
     if not quotes_url:
         return {"error": "Could not find a quotes page."}
 
-    # step 3: extract quotes from the quotes page
+    # step 2: extract quotes from the quotes page
     quotes_data = extract_quotes(quotes_url, headers=headers)
+
     if not quotes_data:
         return {"error": "No quotes found."}
 
     return {"quotes": quotes_data} # returns dictionary with all quotes
-    # return jsonify(quotes_data)
+    # return jsonify({"quotes": quotes_data})

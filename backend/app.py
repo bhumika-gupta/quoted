@@ -3,7 +3,7 @@ from flask_cors import CORS # import CORS to allow cross-origin requests
 from main import get_search_results
 from main import get_quotes_page_url
 from main import extract_quotes
-from main import get_quotes_for_book # imports scraping logic
+from main import get_quotes_from_href # imports scraping logic
 
 
 app = Flask(__name__)
@@ -33,19 +33,17 @@ def quotes():
     if not href:
         return jsonify({"error": "Missing book href"}), 400 # return error if href is not provided
     
-    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"}
-    full_url = "https://www.goodreads.com" + href # build the full URL to the book's page
-    quotes_url = get_quotes_page_url(full_url, headers=headers) # get the quotes page URL from the book page URL
-    
-    if not quotes_url:
-        return jsonify({"error": "Could not find quotes page"}), 404 # if no quotes page found, return error
-    
-    quotes = extract_quotes(quotes_url, headers=headers) # scrape quotes from the quotes page
-    
-    if not quotes:
-        return jsonify({"error": "No quotes found."}), 404 # if quotes scraping fails or finds none
-    
-    return jsonify({"quotes": quotes}) # return the list of quotes
+    try:
+        quotes = get_quotes_from_href(href)
+        if "error" in quotes:
+            return jsonify(quotes), 404
+        if not quotes:
+            return jsonify({"error": "No quotes found."}), 404
+        return jsonify(quotes)
+        # return jsonify({"quotes": quotes})
+    except Exception as e:
+        print("Internal error:", e)
+        return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/test') # a simple route to verify the backend is working
 def test():

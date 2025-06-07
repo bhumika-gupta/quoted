@@ -16,10 +16,16 @@ function App() {
   const searchQuotes = async() => {
     if (!book.trim()) return; // do nothing if input is empty
     const response = await fetch(`/api/search_results?userBook=${encodeURIComponent(book)}`);
-    // const text = await response.text();
-    // console.log("Raw response text:", text);
-    const data = await response.json(); // parse JSON
-    setSearchResults(data.results); // update search results
+    // const text = await response.text(); # debugging
+    // console.log("Raw response text:", text); # debugging
+
+    try {
+      const data = await response.json(); // parse JSON
+      setSearchResults(data.results); // update search results
+    } catch (e) {
+      console.error("JSON parse error:", e);
+      setError("Invalid response from server.");
+    }
   }
 
   // fetch quotes for selected book using href from search results
