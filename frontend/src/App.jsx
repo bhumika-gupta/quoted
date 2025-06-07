@@ -1,10 +1,10 @@
 import { useState } from 'react'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
-// import './App.css'
+import './App.css'
 
 function App() {
-  // const [count, setCount] = useState(0)
+  // state variables
   const [book, setBook] = useState(""); // book stores current input from user, setBook updates the value
   const [quotes, setQuotes] = useState([]); // stores list list of quote results from Flask API, starts as an empty array
   const [loading, setLoading] = useState(false); // loading is a flag to show whether we're currently waiting for a response from the server
@@ -12,24 +12,25 @@ function App() {
   const [searchResults, setSearchResults] = useState([]);
   // const [bookHref, setBookHref] = useState("")
 
-  // add function to display search results from get_search_results() function and ask user for input
+  // fetch search results from Flask backend based on user input
   const searchQuotes = async() => {
     if (!book.trim()) return; // do nothing if input is empty
     const response = await fetch(`/api/search_results?userBook=${encodeURIComponent(book)}`);
     // const text = await response.text();
     // console.log("Raw response text:", text);
-    const data = await response.json();
-    setSearchResults(data.results);
+    const data = await response.json(); // parse JSON
+    setSearchResults(data.results); // update search results
   }
 
-  // function to call backend API and update UI with quotes
+  // fetch quotes for selected book using href from search results
   const fetchQuotes = async (bookHref) => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); // start loading message
+    setError(null); // clear previous errors
+
     try {
       const response = await fetch(`http://localhost:5050/api/quotes?href=${encodeURIComponent(bookHref)}`); // sends a GET request to Flask backend & adds input bookname into the URL
       const data = await response.json(); // parse JSON response
-      console.log("Response data from backend: ", data);
+      console.log("Response data from backend: ", data); // debugging
 
       if (data.error) {
         setError(data.error); // show any error returned from Flask
@@ -38,7 +39,6 @@ function App() {
         setQuotes(data.quotes);
         setError(null);
       } else {
-        // setQuotes(data.quotes); // update quotes state
         setQuotes([]);
         setError("Unexpected response format.");
       }
@@ -48,6 +48,7 @@ function App() {
     setLoading(false);
   };
 
+  // optional: test the backend is reachable
   const testBackend = async () => {
     try {
       const res = await fetch("http://localhost:5050/test")
@@ -60,9 +61,12 @@ function App() {
     }
   };
 
+  // render UI
   return (
       <div className="App" style={{ padding: "2rem", fontFamily: "sans-serif" }}>
         <h1>quoted</h1>
+
+        {/* book input field */}
         <input
           type="text"
           value={book}
@@ -71,19 +75,21 @@ function App() {
           style={{ padding: "0.5rem", width: "300px" }}
         />
 
+        {/* search button */}
         <button onClick={searchQuotes} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
           Search
         </button>
 
+        {/* optional: button to test connection to backend */}
         <button onClick={testBackend} style={{ marginTop: "1rem", marginLeft: "1rem", padding: "0.5rem" }}>
           Test Backend
         </button>
 
-        
+        {/* loading and error messages */}
         {loading ? <p>Loading...</p> : null}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
-        {/* display search results for quotes*/}
+        {/* show book search results if quotes haven't been fetched yet */}
         { !loading && quotes.length === 0 && (
         <ul>
           {searchResults.map((result, idx) => (
@@ -95,10 +101,12 @@ function App() {
         </ul>)
         }
         
+        {/* initial message if no quotes and no search yet */}
         {!loading && searchResults.length === 0 && !error && quotes.length === 0 && (
           <p>No quotes to display. Try searching for a book!</p>
         )}
         
+        {/* show retrieved quotes */}
         <ul>
           {Array.isArray(quotes) && quotes.map((q, idx) => (
             <li key={idx}>
@@ -106,23 +114,12 @@ function App() {
             </li>
           ))}
         </ul>
-
-        
         </div>
   );
 }
 
 export default App;
 
-/* 
-<ul>
-          {quotes.map((q, idx) => (
-            <li key={idx}>
-                {q.quote} - <em>{q.author}</em>
-            </li>
-          ))}
-        </ul>
-*/
 
 // in return statement:
 /* <div>
