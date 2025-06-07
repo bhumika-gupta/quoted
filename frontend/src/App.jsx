@@ -100,7 +100,7 @@ function App() {
         <ul>
           {searchResults.map((result, idx) => (
             <div key={idx}>
-                <p>{result.bookTitle} by {result.bookAuthor} {result.publishedYear}</p>
+                <p>{result.bookTitle} by {result.bookAuthor}, published {result.publishedYear}</p>
                 <button onClick={() => fetchQuotes(result.href)}>Get Quotes</button>
             </div>
           ))}

@@ -2,6 +2,7 @@ import httpx # for making HTTP requests
 from selectolax.parser import HTMLParser # lightweight HTML parser
 # import sys # access command line arguments
 import json # for JSON handling
+import re
 
 def get_search_results(user_search, headers):
     
@@ -28,8 +29,15 @@ def get_search_results(user_search, headers):
         # extracts the year from the string if available
         if publishedYearBox: # in case it's None
             publishedYearContent = publishedYearBox.text()
-            publishedYearText = publishedYearContent.split() # TODO: use regex to find 4 digit year
-            publishedYear = publishedYearText[2]
+
+            # look for 4-digit year after the word "published"
+            match = re.search(r'published\s+(\d{4})', publishedYearContent) # published - the exact word; \s+ - one or more whitespace characters after it; (\d{4}) - captures exactly 4 digits in a group
+            if match:
+                publishedYear = match.group(1)
+            else:
+                # fallback: first 4-digit number (sometimes format varies)
+                fallback_match = re.search(r'(\d{4})', publishedYearContent)
+                publishedYear = fallback_match.group(1) if fallback_match else "N/A"
         else:
             publishedYear = "N/A"
 
