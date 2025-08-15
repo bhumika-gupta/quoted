@@ -11,6 +11,7 @@ function App() {
   const [error, setError] = useState(null); // error message if the fetch fails or returns an error
   const [searchResults, setSearchResults] = useState([]);
   // const [bookHref, setBookHref] = useState("")
+  const [currentPage, setCurrentPage] = useState(1);
 
   // fetch search results from Flask backend based on user input
   const searchQuotes = async() => {
@@ -66,6 +67,11 @@ function App() {
       alert("Error reaching backend");
     }
   };
+  var quotes_per_page = 15;
+  var start_index = (currentPage - 1) * quotes_per_page;
+  var end_index = currentPage * quotes_per_page;
+
+  var numPages = Math.ceil(quotes.length / quotes_per_page);
 
   // render UI
   return (
@@ -111,15 +117,30 @@ function App() {
         {!loading && searchResults.length === 0 && !error && quotes.length === 0 && (
           <p>No quotes to display. Try searching for a book!</p>
         )}
-        
-        {/* show retrieved quotes */}
+
+
+        {/* show 20 quotes at a time */}
         <ul>
-          {Array.isArray(quotes) && quotes.map((q, idx) => (
+          {Array.isArray(quotes) && quotes.slice(start_index, end_index).map((q, idx) => (
             <li key={idx}>
                 {q.quote} - <em>{q.author}</em>
             </li>
           ))}
         </ul>
+
+        {/* previous button if currentPage > 1 */}
+        {Array.isArray(quotes) && currentPage > 1 && (
+        <button onClick={() => setCurrentPage(currentPage-1)} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
+          Previous
+        </button>)
+        }
+
+        {/* next button if currentPage < numPages */}
+        {Array.isArray(quotes) && currentPage < numPages && (
+        <button onClick={() => setCurrentPage(currentPage+1)} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
+          Next
+        </button>)
+        }
         </div>
   );
 }
