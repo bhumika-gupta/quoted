@@ -162,7 +162,7 @@ function App() {
         )}
 
         {Array.isArray(quotes) && numPages > 1 && (
-          <button onClick={() => setCurrentPage(currentPage)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
+          <button className="active-page" onClick={() => setCurrentPage(currentPage)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
             {currentPage}
           </button>
         )}
