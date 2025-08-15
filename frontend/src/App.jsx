@@ -73,6 +73,14 @@ function App() {
 
   var numPages = Math.ceil(quotes.length / quotes_per_page);
 
+  const handleNext = () => {
+    setCurrentPage(currentPage+1)
+  };
+
+  const handlePrev = () => {
+    setCurrentPage(currentPage-1)
+  };
+
   // render UI
   return (
       <div className="App" style={{ padding: "2rem", fontFamily: "sans-serif" }}>
@@ -130,14 +138,18 @@ function App() {
 
         {/* previous button if currentPage > 1 */}
         {Array.isArray(quotes) && currentPage > 1 && (
-        <button onClick={() => setCurrentPage(currentPage-1)} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
+        <button onClick={handlePrev} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
           Previous
         </button>)
         }
 
+        {/* render page numbers */}
+
+
+
         {/* next button if currentPage < numPages */}
         {Array.isArray(quotes) && currentPage < numPages && (
-        <button onClick={() => setCurrentPage(currentPage+1)} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
+        <button onClick={handleNext} style={{ marginLeft: "1rem", padding: "0.5rem" }}>
           Next
         </button>)
         }
