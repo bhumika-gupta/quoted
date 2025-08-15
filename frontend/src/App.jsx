@@ -81,6 +81,10 @@ function App() {
     setCurrentPage(currentPage-1)
   };
 
+  /* const pageNumberRender = () => {
+
+  } */
+
   // render UI
   return (
       <div className="App" style={{ padding: "2rem", fontFamily: "sans-serif" }}>
@@ -145,7 +149,35 @@ function App() {
 
         {/* render page numbers */}
 
+        {Array.isArray(quotes) && currentPage-2 > 0 && (
+          <button onClick={() => setCurrentPage(currentPage - 2)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
+            {currentPage-2}
+          </button>
+        )}
 
+        {Array.isArray(quotes) && currentPage-1 > 0 && (
+          <button onClick={() => setCurrentPage(currentPage - 1)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
+            {currentPage-1}
+          </button>
+        )}
+
+        {Array.isArray(quotes) && numPages > 1 && (
+          <button onClick={() => setCurrentPage(currentPage)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
+            {currentPage}
+          </button>
+        )}
+
+        {Array.isArray(quotes) && currentPage + 1 <= numPages && (
+          <button onClick={() => setCurrentPage(currentPage + 1)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
+            {currentPage+1}
+          </button>
+        )}
+
+        {Array.isArray(quotes) && currentPage+2 <= numPages && (
+          <button onClick={() => setCurrentPage(currentPage + 2)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
+            {currentPage+2}
+          </button>
+        )}
 
         {/* next button if currentPage < numPages */}
         {Array.isArray(quotes) && currentPage < numPages && (
