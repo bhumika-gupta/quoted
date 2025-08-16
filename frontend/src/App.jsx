@@ -115,7 +115,7 @@ function App() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         {/* show book search results if quotes haven't been fetched yet */}
-        { !loading && quotes.length === 0 && (
+        {!loading && quotes.length === 0 && (
         <ul>
           {searchResults.map((result, idx) => (
             <div key={idx}>
@@ -134,7 +134,7 @@ function App() {
         {/* show 15 quotes at a time */}
         <ul>
           {Array.isArray(quotes) && quotes.slice(start_index, end_index).map((q, idx) => (
-            <li key={idx}>
+            <li key={start_index + idx}> {/* idx alone is not unique "key" prop due to dynamic nature of slicing array and pagination */}
                 {q.quote} - <em>{q.author}</em>
             </li>
           ))}
@@ -151,6 +151,7 @@ function App() {
         {Array.isArray(quotes) && numPages > 1 && 
           Array.from({length: endPageWindow - startPageWindow + 1}, (_, i) => startPageWindow + i).map((n, idx) => 
           <button 
+            key={n}
             onClick={() => setCurrentPage(n)} 
             style={{ marginLeft: "1rem", padding: "0.4rem" }}
             className={n === currentPage ? "active-page" : ""}>
