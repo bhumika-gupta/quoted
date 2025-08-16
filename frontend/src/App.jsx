@@ -130,8 +130,7 @@ function App() {
           <p>No quotes to display. Try searching for a book!</p>
         )}
 
-
-        {/* show 20 quotes at a time */}
+        {/* show 15 quotes at a time */}
         <ul>
           {Array.isArray(quotes) && quotes.slice(start_index, end_index).map((q, idx) => (
             <li key={idx}>
@@ -157,37 +156,6 @@ function App() {
             {n}
           </button>
         )}
-      {/* 
-        {Array.isArray(quotes) && currentPage-2 > 0 && (
-          <button onClick={() => setCurrentPage(currentPage - 2)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
-            {currentPage-2}
-          </button>
-        )}
-
-        {Array.isArray(quotes) && currentPage-1 > 0 && (
-          <button onClick={() => setCurrentPage(currentPage - 1)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
-            {currentPage-1}
-          </button>
-        )}
-
-        {Array.isArray(quotes) && numPages > 1 && (
-          <button className="active-page" onClick={() => setCurrentPage(currentPage)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
-            {currentPage}
-          </button>
-        )}
-
-        {Array.isArray(quotes) && currentPage + 1 <= numPages && (
-          <button onClick={() => setCurrentPage(currentPage + 1)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
-            {currentPage+1}
-          </button>
-        )}
-
-        {Array.isArray(quotes) && currentPage+2 <= numPages && (
-          <button onClick={() => setCurrentPage(currentPage + 2)} style={{ marginLeft: "1rem", padding: "0.4rem"}}>
-            {currentPage+2}
-          </button>
-        )}
-          */}
 
         {/* next button if currentPage < numPages */}
         {Array.isArray(quotes) && currentPage < numPages && (
