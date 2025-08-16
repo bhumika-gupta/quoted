@@ -153,7 +153,7 @@ function App() {
           <button 
             onClick={() => setCurrentPage(n)} 
             style={{ marginLeft: "1rem", padding: "0.4rem" }}
-            /*classname={currentPage === n ? "active-page" : ""*/>
+            className={n === currentPage ? "active-page" : ""}>
             {n}
           </button>
         )}
