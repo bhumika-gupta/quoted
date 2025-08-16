@@ -83,7 +83,7 @@ function App() {
 
   var pageNumberWindow = 2; // show 2 pages before and after the currentPage
   var startPageWindow = Math.max(1, currentPage - pageNumberWindow);
-  var endPageWindow = Math.max (numPages, currentPage + pageNumberWindow);
+  var endPageWindow = Math.min(numPages, currentPage + pageNumberWindow);
 
   // render UI
   return (
@@ -148,8 +148,12 @@ function App() {
         }
 
         {/* render page numbers */}
-        {Array.isArray(quotes) && numPages > 1 && Array.from({length: endPageWindow - startPageWindow + 1}, (_, i) => startPageWindow + i).map((n, idx) => 
-          <button onClick={() => setCurrentPage(n)} style={{ marginLeft: "1rem", padding: "0.4rem" }}>
+        {Array.isArray(quotes) && numPages > 1 && 
+          Array.from({length: endPageWindow - startPageWindow + 1}, (_, i) => startPageWindow + i).map((n, idx) => 
+          <button 
+            onClick={() => setCurrentPage(n)} 
+            style={{ marginLeft: "1rem", padding: "0.4rem" }}
+            /*classname={currentPage === n ? "active-page" : ""*/>
             {n}
           </button>
         )}
