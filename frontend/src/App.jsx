@@ -41,6 +41,7 @@ function App() {
 
       if (data.error) {
         setError(data.error); // show any error returned from Flask
+        setSearchResults([]); // clear search results if there's an error
         setQuotes([]); // clear quotes if there's an error
       } else if (Array.isArray(data.quotes)) {
         setQuotes(data.quotes);
