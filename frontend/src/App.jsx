@@ -23,6 +23,7 @@ function App() {
     try {
       const data = await response.json(); // parse JSON
       setError(null); // clear previous errors
+      setQuotes([]); // clear previous quotes
       setSearchResults(data.results); // update search results
     } catch (e) {
       console.error("JSON parse error:", e);
